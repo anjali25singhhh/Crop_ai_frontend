@@ -1,18 +1,30 @@
-// src/config.js
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://crop-disease-detection-1-zqw1.onrender.com';
+import axios from 'axios';
 
-// In your upload component or service
+// Centralized API configuration
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://crop-disease-detection-1-zqw1.onrender.com';
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000, // 30 seconds timeout
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+});
+
 export const uploadImage = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-
   try {
-    const response = await fetch(`${API_BASE_URL}/api/predict`, {
-      method: 'POST',
-      body: formData
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await apiClient.post('/api/predict', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
-    return await response.json();
+
+    return response.data;
   } catch (error) {
-    console.error('Upload failed:', error);
+    console.error('Upload failed:', error.response ? error.response.data : error.message);
+    throw new Error('Failed to analyze the image. Please try again or check if the server is running.');
   }
 };
